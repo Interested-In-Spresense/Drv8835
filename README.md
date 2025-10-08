@@ -7,6 +7,4 @@ https://akizukidenshi.com/catalog/g/g109848/
 
 -------------------------
 
-まだ、enableモードのみです。
-
 そのうちAIに書かせます。

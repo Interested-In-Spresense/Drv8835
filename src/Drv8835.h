@@ -29,13 +29,33 @@
 class Drv8835Class
 {
 public:
+  Drv8835Class() {}
 
-   Drv8835Class(){}
+  /**
+   * @brief 初期化（モードピン指定あり）
+   * @param m  true = EN/PHモード, false = IN/INモード
+   * @param e0 Motor0 Enable または IN1
+   * @param p0 Motor0 Phase  または IN2
+   * @param e1 Motor1 Enable または IN3
+   * @param p1 Motor1 Phase  または IN4
+   * @param mp MODEピン
+   */
+  void begin(bool m, uint8_t e0, uint8_t p0, uint8_t e1, uint8_t p1, uint8_t mp);
 
-  void begin(uint8_t m, uint8_t e0, uint8_t p0, uint8_t e1, uint8_t p1);
-  void begin(uint8_t e0, uint8_t p0, uint8_t e1, uint8_t p1);
+  /**
+   * @brief 初期化（モード固定）
+   * @param m  true = EN/PHモード, false = IN/INモード
+   */
+  void begin(bool m, uint8_t e0, uint8_t p0, uint8_t e1, uint8_t p1);
 
+  /**
+   * @brief スピード設定（0?100%）
+   */
   void speed(uint8_t ch, uint8_t value);
+
+  /**
+   * @brief 前進・後退・停止
+   */
   void front(uint8_t ch);
   void back(uint8_t ch);
   void front(uint8_t ch, uint8_t speed);
@@ -43,8 +63,7 @@ public:
   void stop(uint8_t ch);
 
 private:
-
-  uint8_t mode;
+  bool mode;  // true: EN/PH, false: IN/IN
 
   uint8_t enable0;
   uint8_t phase0;
@@ -53,14 +72,12 @@ private:
   uint8_t enable1;
   uint8_t phase1;
   uint8_t speed1;
-
 };
-
 
 /****************************************************************************
  * Instance
  ****************************************************************************/
 
-extern class Drv8835Class Drv8835;
+extern Drv8835Class Drv8835;
 
 #endif // _DRV8835_H_
