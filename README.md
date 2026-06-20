@@ -1,85 +1,114 @@
-# DRV8835 Motor Driver Library
+# DRV8835 DCモータードライバーモジュールライブラリ
 
-秋月電子の「DRV8835 使用ステッピング & DC モータードライバーモジュール」用の制御ライブラリです。  
-このライブラリを使うことで、Arduino 環境で DRV8835 を簡単に制御できます。
+DRV8835モータードライバーモジュールをArduino/Spresenseから制御するためのライブラリです。
 
----
+対象モジュール（参考）:
+https://akizukidenshi.com/catalog/g/g109848/
 
-## 機能概要
+## 概要
 
-- DRV8835 チップで DC モータを 2 チャンネル制御  
-- モード選択（EN/PH モード or IN/IN モード）対応  
-- 各チャンネルに対して速度指定付き前進／後退制御  
-- チャンネル毎の停止制御  
-- 0～100％ の速度スケールで扱いやすい
+- 2chのDCモーター制御
+- 速度指定（0-100%）
+- 正転・逆転・停止
+- MODEピンあり/なしの2種類の初期化関数
 
----
+## ピン割り当て
 
-## クラスとメソッド
+引数 `e0, p0, e1, p1` は以下の入力端子に対応します。
 
-ライブラリの中心は `Drv8835Class` で、以下のメソッドを提供します：
+- e0: IN0
+- p0: IN1
+- e1: IN2
+- p1: IN3
 
-| メソッド | 説明 |
-|---|---|
-| `begin(bool m, uint8_t e0, uint8_t p0, uint8_t e1, uint8_t p1)` | モードピンなしで初期化 |
-| `begin(bool m, uint8_t e0, uint8_t p0, uint8_t e1, uint8_t p1, uint8_t mp)` | モードピンありで初期化 |
-| `speed(uint8_t ch, uint8_t value)` | 指定チャンネル(ch=0 or 1)の速度を 0～100 に設定 |
-| `front(uint8_t ch)` | 指定チャンネルを前進（現在設定速度） |
-| `back(uint8_t ch)` | 指定チャンネルを後退（現在設定速度） |
-| `front(uint8_t ch, uint8_t speed)` | 指定チャンネルを指定速度で前進 |
-| `back(uint8_t ch, uint8_t speed)` | 指定チャンネルを指定速度で後退 |
-| `stop(uint8_t ch)` | 指定チャンネルを停止 |
+MODEピンを使う場合は `mp` にMODE端子のGPIO番号を指定します。
 
-なお、チャンネルは `0` および `1` を使用します。
+## API
 
----
-
-## インストール方法
-
-1. このリポジトリをクローンまたは ZIP でダウンロード  
-   ```bash
-   git clone https://github.com/Interested-In-Spresense/Drv8835.git
-   ```
-2. Arduino の `libraries` フォルダに配置  
-3. Arduino IDE でスケッチにて `#include "Drv8835.h"` を追加して使用
-
----
-
-## 使用例
+### 初期化
 
 ```cpp
-#include <Drv8835.h>
+void begin(bool m, uint8_t e0, uint8_t p0, uint8_t e1, uint8_t p1, uint8_t mp);
+void begin(bool m, uint8_t e0, uint8_t p0, uint8_t e1, uint8_t p1);
+```
+
+- `m` : モード設定値（MODEピンへ出力する値）
+- `e0, p0, e1, p1` : モータードライバ入力端子のGPIO番号
+- `mp` : MODEピンのGPIO番号
+
+### 動作制御
+
+```cpp
+void speed(uint8_t ch, uint8_t value);
+void front(uint8_t ch);
+void back(uint8_t ch);
+void front(uint8_t ch, uint8_t speed);
+void back(uint8_t ch, uint8_t speed);
+void stop(uint8_t ch);
+```
+
+- `ch` : チャンネル番号（0 または 1）
+- `value`, `speed` : 0-100（%）
+
+## 使い方
+
+### MODEピンを使う例
+
+```cpp
+#include "Drv8835.h"
+
+const uint8_t modePin = 2;
 
 void setup() {
-  // m = true → EN/PH モード, e0, p0, e1, p1, mp（モードピン）
-  Drv8835.begin(true, 3, 4, 5, 6, 7);
-  // またはモードピンなし
-  // Drv8835.begin(true, 3, 4, 5, 6);
+	Drv8835.begin(true, 19, 18, 21, 20, modePin);
 }
 
 void loop() {
-  // チャンネル 0 を前進、チャンネル 1 を後退
-  Drv8835.front(0, 80);
-  Drv8835.back(1, 80);
-  delay(1000);
+	Drv8835.speed(0, 60);
+	Drv8835.front(0);
+	delay(1000);
 
-  Drv8835.stop(0);
-  Drv8835.stop(1);
-  delay(500);
+	Drv8835.stop(0);
+	delay(500);
 }
 ```
 
----
+### MODEピンを使わない例
 
-## 注意事項 / Tips
+```cpp
+#include "Drv8835.h"
 
-- `m = true` を選ぶと EN/PH モード、`false` を選ぶと IN/IN モードになる仕様です。  
-- `speed()` メソッドで速度を設定した後、`front()` / `back()` を使うとその速度が使われます。  
-- モードピンを用いる場合は `begin()` の第6引数として `mp`（モードピン）を渡します。
+void setup() {
+	Drv8835.begin(false, 19, 18, 21, 20);
+}
 
----
+void loop() {
+	Drv8835.front(0, 50);
+	delay(1000);
+
+	Drv8835.back(0, 50);
+	delay(1000);
+}
+```
+
+## サンプル
+
+examples配下に以下のサンプルがあります。
+
+- simple
+- simple_enph
+- simple_inin
+
+## ビルド確認
+
+Spresense向けに以下サンプルのコンパイル確認済みです。
+
+- simple
+- simple_enph
+- simple_inin
+
+`arduino-cli` では、ライブラリの `architecture=all` に関する警告が出ることがありますが、コンパイル自体は通ります。
 
 ## ライセンス
 
-このライブラリは **GNU Lesser General Public License (LGPL) v2.1 以降** の条件で公開されています。  
-（元のライセンス文を参照してください）
+このライブラリはLGPL v2.1以降で提供されます。

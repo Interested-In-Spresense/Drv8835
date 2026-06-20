@@ -20,16 +20,15 @@
 #include "Drv8835.h"
 
 /****************************************************************************
- * begin (with mode pin)
- * m  : ÉÇÅ[Éh (true=EN/PH, false=IN/IN)
- * mp : MODEÉsÉìî‘çÜ
+ * begin
  ****************************************************************************/
 void Drv8835Class::begin(bool m, uint8_t e0, uint8_t p0, uint8_t e1, uint8_t p1, uint8_t mp)
 {
   pinMode(mp, OUTPUT);
-  digitalWrite(mp, m ? HIGH : LOW);
+  digitalWrite(mp, m);
 
-  begin(m, e0, p0, e1, p1);
+  begin(m, e0, p0, e1,  p1);
+
 }
 
 /****************************************************************************
@@ -37,7 +36,7 @@ void Drv8835Class::begin(bool m, uint8_t e0, uint8_t p0, uint8_t e1, uint8_t p1,
  ****************************************************************************/
 void Drv8835Class::begin(bool m, uint8_t e0, uint8_t p0, uint8_t e1, uint8_t p1)
 {
-  mode = m;  // true: EN/PH, false: IN/IN
+  mode    = m;
   enable0 = e0;
   phase0  = p0;
   enable1 = e1;
@@ -57,104 +56,111 @@ void Drv8835Class::begin(bool m, uint8_t e0, uint8_t p0, uint8_t e1, uint8_t p1)
   speed1 = 0;
 }
 
+
 /****************************************************************************
  * speed
  ****************************************************************************/
+
 void Drv8835Class::speed(uint8_t ch, uint8_t value)
 {
-  uint8_t s = constrain(value * 255 / 100, 0, 255);
   if (ch == 0) {
-    speed0 = s;
+    speed0 = constrain(value * 255 / 100, 0, 255);
     analogWrite(enable0, speed0);
   } else if (ch == 1) {
-    speed1 = s;
+    speed1 = constrain(value * 255 / 100, 0, 255);
     analogWrite(enable1, speed1);
   }
 }
 
 /****************************************************************************
- * front
+ * front / back
  ****************************************************************************/
+
 void Drv8835Class::front(uint8_t ch)
 {
-  if (mode) { /* En/Ph mode */
+  if (mode) { /* PH/EN mode */
     if (ch == 0) {
       digitalWrite(phase0, HIGH);
       analogWrite(enable0, speed0);
-    } else {
+    } else if (ch == 1) {
       digitalWrite(phase1, HIGH);
       analogWrite(enable1, speed1);
     }
-  } else { /* In/In mode */
+  } else { /* IN/IN mode */
     if (ch == 0) {
       analogWrite(enable0, speed0);
-      digitalWrite(phase0, LOW);
-    } else {
+      analogWrite(phase0, 0);
+    } else if (ch == 1) {
       analogWrite(enable1, speed1);
-      digitalWrite(phase1, LOW);
+      analogWrite(phase1, 0);
     }
   }
 }
 
-/****************************************************************************
- * back
- ****************************************************************************/
 void Drv8835Class::back(uint8_t ch)
 {
-  if (mode) { /* En/Ph mode */
+  if (mode) { /* PH/EN mode */
     if (ch == 0) {
       digitalWrite(phase0, LOW);
       analogWrite(enable0, speed0);
-    } else {
+    } else if (ch == 1) {
       digitalWrite(phase1, LOW);
       analogWrite(enable1, speed1);
     }
-  } else { /* In/In mode */
+  } else { /* IN/IN mode */
     if (ch == 0) {
-      digitalWrite(enable0, LOW);
+      analogWrite(enable0, 0);
       analogWrite(phase0, speed0);
-    } else {
-      digitalWrite(enable1, LOW);
+    } else if (ch == 1) {
+      analogWrite(enable1, 0);
       analogWrite(phase1, speed1);
     }
   }
 }
 
 /****************************************************************************
- * front with speed
+ * front / back with speed
  ****************************************************************************/
+
 void Drv8835Class::front(uint8_t ch, uint8_t value)
 {
-  uint8_t s = constrain(value * 255 / 100, 0, 255);
-  if (ch == 0) speed0 = s; else speed1 = s;
+  if (ch == 0) {
+    speed0 = constrain(value * 255 / 100, 0, 255);
+  } else if (ch == 1) {
+    speed1 = constrain(value * 255 / 100, 0, 255);
+  }
   front(ch);
 }
 
-/****************************************************************************
- * back with speed
- ****************************************************************************/
 void Drv8835Class::back(uint8_t ch, uint8_t value)
 {
-  uint8_t s = constrain(value * 255 / 100, 0, 255);
-  if (ch == 0) speed0 = s; else speed1 = s;
+  if (ch == 0) {
+    speed0 = constrain(value * 255 / 100, 0, 255);
+  } else if (ch == 1) {
+    speed1 = constrain(value * 255 / 100, 0, 255);
+  }
   back(ch);
 }
 
 /****************************************************************************
  * stop
  ****************************************************************************/
+
 void Drv8835Class::stop(uint8_t ch)
 {
-  if (mode) { /* En/Ph mode */
-    if (ch == 0) analogWrite(enable0, 0);
-    else analogWrite(enable1, 0);
-  } else { /* In/In mode */
+  if (mode) { /* PH/EN mode */
     if (ch == 0) {
-      digitalWrite(enable0, LOW);
-      digitalWrite(phase0, LOW);
-    } else {
-      digitalWrite(enable1, LOW);
-      digitalWrite(phase1, LOW);
+      analogWrite(enable0, 0);
+    } else if (ch == 1) {
+      analogWrite(enable1, 0);
+    }
+  } else { /* IN/IN mode */
+    if (ch == 0) {
+      analogWrite(enable0, 0);
+      analogWrite(phase0, 0);
+    } else if (ch == 1) {
+      analogWrite(enable1, 0);
+      analogWrite(phase1, 0);
     }
   }
 }
@@ -162,4 +168,5 @@ void Drv8835Class::stop(uint8_t ch)
 /****************************************************************************
  * Instance
  ****************************************************************************/
+
 Drv8835Class Drv8835;
